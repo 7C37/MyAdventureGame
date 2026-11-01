@@ -35,5 +35,20 @@ public class Warrior extends GameCharacter {
     public void addStrength(int amount) {
         if(amount>0) strength+=amount;
     }
+    
+    /** gets warrior's fixed moves
+     * @return warrior abilities
+     */
+    @Override
+    public Ability[] getAbilities() {
+        return new Ability[]{
+            new Ability("Light Attack",1,0,7,0,0,20),
+            new Ability("Defend",1,0,0,9,0,12),
+            new Ability("Heavy Attack",2,20,20,0,0,0),
+            new Ability("Cleave",2,40,16,0,0,0),
+            new Ability("Sunder",3,100,45,0,0,0)
+        };
+    }
+
 }
 

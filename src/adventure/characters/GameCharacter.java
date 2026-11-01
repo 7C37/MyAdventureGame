@@ -129,4 +129,11 @@ public abstract class GameCharacter {
             + " | " + getPowerName() + ": " + getPower()
             + " | Defense: " + defense;
     }
+
+
+    /** gets fixed character moves
+     * @return five class abilities
+     */
+    public abstract Ability[] getAbilities();
+
 }

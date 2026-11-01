@@ -97,33 +97,38 @@ public class ConsoleUI {
             catch(NumberFormatException e) { System.out.println("Invalid shop choice."); }
         }
     }
-    /** displays battle and applies actions
+
+    /** displays fixed skills and resolves player actions
      * @param input shared scanner
      * @param game current run
      */
     private void battleMenu(Scanner input,AdventureGame game) {
-        Combat fight=game.getCombat(); //active fight
+        Combat fight=game.getCombat(); //active battle
         System.out.println("\n"+fight.getPlayer()+" | Block: "+fight.getBlock());
         System.out.println(fight.getEnemy()+" | Intent: "+fight.getEnemy().getIntent());
-        System.out.println("1) Attack (1 AP)  2) Defend (1 AP)  3) Special (2 AP, 20 resource)");
-        System.out.println("4) End turn  5) Quit");
-        String choice=input.nextLine().trim(); //combat input
-        String result=switch(choice) {
-            case "1" -> fight.attack();
-            case "2" -> fight.defend();
-            case "3" -> fight.special();
-            case "4" -> fight.endTurn();
-            case "5" -> "quit";
-            default -> "Invalid choice. Enter 1-5.";
-        };
-        if(result.equals("quit")) {
-            System.out.println("Game closed.");
+        Ability[] skills=fight.getPlayer().getAbilities(); //character moves
+        for(int i=0;i<skills.length;i++) {
+            Ability skill=skills[i]; //displayed move
+            System.out.println((i+1)+") "+skill.name()+" ("+skill.apCost()+" AP, "+skill.resourceCost()+" "+fight.getPlayer().getResourceName()+")");
+        }
+        System.out.println("6) End turn  7) Quit");
+        String choice=input.nextLine().trim(); //chosen action
+        if(choice.equals("7")) {
             running=false;
+            System.out.println("Game closed.");
             return;
+        }
+        String result; //action feedback
+        try {
+            int pick=Integer.parseInt(choice); //1-based menu entry
+            result=pick==6?fight.endTurn():fight.playAbility(pick-1);
+        } catch(NumberFormatException e) {
+            result="Invalid choice. Enter 1-7.";
         }
         System.out.println(result);
         if(fight.isOver()) System.out.println(game.resolveBattle());
     }
+
 }
 
 

@@ -1,19 +1,18 @@
 package adventure.combat;
-import adventure.characters.GameCharacter;
+import adventure.characters.*;
 
-/** runs combat rules w/o console input */
+/** applies player skills and enemy intents */
 public class Combat {
-    /** active character */
-    private final GameCharacter player; //player
-    /** active foe */
-    private final Enemy enemy; //opponent
-    /** temporary player block */
-    private int block; //turn shield
+    /** selected hero */
+    private final GameCharacter player; //active hero
+    /** selected enemy */
+    private final Enemy enemy; //active foe
+    /** active temporary shield */
+    private int block; //player block
 
-    
-    /** starts battle w/ refreshed ap
-     * @param player active character
-     * @param enemy opposing foe
+    /** starts battle and refreshes ap
+     * @param player active hero
+     * @param enemy active foe
      */
     public Combat(GameCharacter player,Enemy enemy) {
         if(player==null||enemy==null) throw new IllegalArgumentException("Missing combatant");
@@ -21,72 +20,66 @@ public class Combat {
         this.enemy=enemy;
         player.resetAP();
     }
-
-    /** gets player
-     * @return active character
+    /** gets hero
+     * @return current player
      */
     public GameCharacter getPlayer() { return player; }
-
-    /** gets enemy
-     * @return active foe
+    /** gets foe
+     * @return current enemy
      */
     public Enemy getEnemy() { return enemy; }
-
-    /** gets player block
-     * @return temporary shield
+    /** gets current shield
+     * @return block value
      */
     public int getBlock() { return block; }
-
-    /** checks if battle ended
-     * @return true if someone fell
+    /** checks combat result
+     * @return true if either side defeated
      */
-    public boolean isOver() {
-        return !player.isAlive()||!enemy.isAlive();
-    }
+    public boolean isOver() { return !player.isAlive()||!enemy.isAlive(); }
 
-    /** plays basic attack for 1 ap
-     * @return action result
+    /** executes selected skill after cost checks
+     * @param index zero-based skill slot
+     * @return action summary or rejection
      */
-    public String attack() {
+    public String playAbility(int index) {
         if(isOver()) return "Battle already ended.";
-        if(!player.spendAP(1)) return "Not enough AP.";
-        int dealt=enemy.takeDamage(player.getPower()+4); //hp dmg
-        player.gainResource(15);
-        return player.getName()+" attacks for "+dealt+" damage and gains resource.";
+        Ability[] skills=player.getAbilities(); //fixed skill list
+        if(index<0||index>=skills.length) return "Invalid ability number.";
+        Ability skill=skills[index]; //selected move
+        if(player.getAP()<skill.apCost()) return "Not enough AP.";
+        if(player.getResource()<skill.resourceCost()) return "Not enough "+player.getResourceName()+".";
+        player.spendAP(skill.apCost());
+        player.spendResource(skill.resourceCost());
+        String result=player.getName()+" uses "+skill.name()+"."; //combat log
+        if(skill.damage()>0) {
+            int dealt=enemy.takeDamage(skill.damage()+player.getPower()); //scaled dmg
+            result+=" Deals "+dealt+" damage.";
+        }
+        if(skill.block()>0) {
+            int shield=skill.block()+player.getDefense(); //scaled block
+            block+=shield;
+            result+=" Gains "+shield+" block.";
+        }
+        if(skill.heal()>0) {
+            int before=player.getHealth(); //hp before healing
+            player.heal(skill.heal()+player.getPower()/2);
+            result+=" Heals "+(player.getHealth()-before)+" HP.";
+        }
+        if(skill.gain()>0) {
+            player.gainResource(skill.gain());
+            result+=" Gains "+player.getResourceName()+".";
+        }
+        return result;
     }
 
-    /** plays special attack for 2 ap and 20 resource
-     * @return action result
-     */
-    public String special() {
-        if(isOver()) return "Battle already ended.";
-        if(player.getAP()<2) return "Need 2 AP.";
-        if(player.getResource()<20) return "Need 20 "+player.getResourceName()+".";
-        player.spendAP(2);
-        player.spendResource(20);
-        int dealt=enemy.takeDamage(player.getPower()*2+8); //hp dmg
-        return player.getName()+" uses a special attack for "+dealt+" damage.";
-    }
-
-    /** gains block for 1 ap
-     * @return action result
-     */
-    public String defend() {
-        if(isOver()) return "Battle already ended.";
-        if(!player.spendAP(1)) return "Not enough AP.";
-        int gained=7+player.getDefense(); //scaled block
-        block+=gained;
-        return player.getName()+" gains "+gained+" block.";
-    }
-
-    /** manually ends turn and applies enemy intent
-     * @return enemy action result
+    /** manually resolves enemy action and refreshes ap
+     * @return enemy action summary
      */
     public String endTurn() {
         if(isOver()) return "Battle already ended.";
-        String result; //enemy action log
+        String result; //enemy action message
         if(enemy.willAttack()) {
-            int taken=Math.max(0,enemy.getDamage()-block); //net dmg
+            int taken=Math.max(0,enemy.getDamage()-block); //unblocked dmg
             player.takeDamage(taken);
             result=enemy.getName()+" attacks for "+taken+" damage after block.";
         } else {
@@ -101,4 +94,3 @@ public class Combat {
         return result;
     }
 }
-

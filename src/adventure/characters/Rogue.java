@@ -35,5 +35,20 @@ public class Rogue extends GameCharacter {
     public void addDexterity(int amount) {
         if(amount>0) dexterity+=amount;
     }
+    
+    /** gets rogue's fixed moves
+     * @return rogue abilities
+     */
+    @Override
+    public Ability[] getAbilities() {
+        return new Ability[]{
+            new Ability("Stab",1,0,6,0,0,20),
+            new Ability("Dodge",1,0,0,10,0,15),
+            new Ability("Riposte",2,20,12,7,0,0),
+            new Ability("Vital Strike",2,40,25,0,0,0),
+            new Ability("Assassinate",3,100,55,0,0,0)
+        };
+    }
+
 }
 
