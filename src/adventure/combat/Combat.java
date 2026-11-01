@@ -10,14 +10,16 @@ public class Combat {
     /** temporary player block */
     private int block; //turn shield
 
-    /** creates one fight
-     * @param player selected character
-     * @param enemy opposing enemy
+    
+    /** starts battle w/ refreshed ap
+     * @param player active character
+     * @param enemy opposing foe
      */
     public Combat(GameCharacter player,Enemy enemy) {
         if(player==null||enemy==null) throw new IllegalArgumentException("Missing combatant");
         this.player=player;
         this.enemy=enemy;
+        player.resetAP();
     }
 
     /** gets player
