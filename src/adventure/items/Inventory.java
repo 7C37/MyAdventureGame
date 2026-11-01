@@ -10,6 +10,10 @@ public class Inventory {
     /** worn gear by slot */
     private final EnumMap<Equipment.Slot,Equipment> equipped=new EnumMap<>(Equipment.Slot.class); //active slots
 
+
+    /** creates empty inventory */
+    public Inventory() {}
+
     /** collects new gear
      * @param item collected equipment
      */

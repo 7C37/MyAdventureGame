@@ -3,7 +3,12 @@ package adventure.items;
 /** gear w/ slot and stat bonuses */
 public class Equipment {
     /** wearable categories */
-    public enum Slot { HELMET,ARMOR,LEGGINGS,RING }
+    public enum Slot {
+        /** helmet equipment */ HELMET,
+        /** armor equipment */ ARMOR,
+        /** leggings equipment */ LEGGINGS,
+        /** ring equipment */ RING
+    }
     /** gear name */
     private final String name; //item label
     /** assigned slot */

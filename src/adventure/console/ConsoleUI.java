@@ -11,6 +11,9 @@ public class ConsoleUI {
     /** main loop flag */
     private boolean running=true; //true until quit
 
+    /** creates console interface */
+    public ConsoleUI() {}
+
     /** launches character selection and game loop */
     public void run() {
         Scanner input=new Scanner(System.in); //console input
