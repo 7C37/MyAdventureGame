@@ -1,12 +1,14 @@
 package adventure.console;
+import adventure.characters.*;
 
-/** starts the adventure application */
+/** starts adventure game */
 public class AdventureApp {
-    /** starts game
+    /** tests playable characters
      * @param args command-line args
      */
     public static void main(String[] args) {
-        System.out.println("My Adventure Game");
-        System.out.println("Welcome to the adventure!");
+        GameCharacter[] party={new Warrior(),new Rogue(),new Wizard()}; //test characters
+        //prints stats via superclass references
+        for(GameCharacter member:party) System.out.println(member);
     }
 }
