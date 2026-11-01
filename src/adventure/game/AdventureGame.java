@@ -1,12 +1,15 @@
 package adventure.game;
 import adventure.characters.GameCharacter;
 import adventure.combat.Combat;
+import adventure.items.*;
 import adventure.world.*;
 
-/** handles stage progress, gold, and node rewards */
+/** handles stage progress, gold, and equipment */
 public class AdventureGame {
     /** current player */
     private final GameCharacter player; //chosen hero
+    /** equipment inventory */
+    private final Inventory inventory=new Inventory(); //owned gear
     /** current stage */
     private Stage stage=new Stage(1); //zone
     /** active battle */
@@ -31,12 +34,10 @@ public class AdventureGame {
         if(player==null||!player.isAlive()) throw new IllegalArgumentException("Invalid character");
         this.player=player;
     }
-
     /** gets available nodes
      * @return current node choices
      */
     public NodeType[] getOptions() { return stage.getOptions(row); }
-
     /** visits chosen node w/o skipping rows
      * @param choice 1-based node selection
      * @return action result
@@ -66,12 +67,37 @@ public class AdventureGame {
             }
             case SHOP -> {
                 shopping=true;
-                return "Shopkeeper: healing supplies cost 15 gold.";
+                return "Shopkeeper: buy supplies or equipment.";
             }
         }
         return "Unknown node.";
     }
-
+    /** gets gear available for purchase
+     * @return shop equipment list
+     */
+    public Equipment[] getShopItems() {
+        int tier=stage.getNumber(); //stage difficulty
+        return new Equipment[]{
+            new Equipment("Guard Helmet",Equipment.Slot.HELMET,tier+1,0,14+tier*4,false),
+            new Equipment("Plate Armor",Equipment.Slot.ARMOR,2*tier+2,0,22+tier*4,false),
+            new Equipment("Swift Leggings",Equipment.Slot.LEGGINGS,tier+1,1,18+tier*4,false),
+            new Equipment("Focus Ring",Equipment.Slot.RING,0,tier*2,18+tier*5,false)
+        };
+    }
+    /** purchases one item for inventory
+     * @param index zero-based shop choice
+     * @return purchase result
+     */
+    public String buyGear(int index) {
+        if(!shopping) return "You are not in a shop.";
+        Equipment[] items=getShopItems(); //shop stock
+        if(index<0||index>=items.length) return "Invalid shop item.";
+        Equipment item=items[index]; //selected gear
+        if(gold<item.getPrice()) return "Not enough gold.";
+        gold-=item.getPrice();
+        inventory.add(item);
+        return "Purchased "+item.getName()+" for "+item.getPrice()+" gold. Open inventory to equip it.";
+    }
     /** buys healing without charging on failure
      * @return purchase result
      */
@@ -84,7 +110,6 @@ public class AdventureGame {
         player.heal(25);
         return "Spent 15 gold and restored "+(player.getHealth()-before)+" HP.";
     }
-
     /** exits shop and advances path
      * @return exit message
      */
@@ -94,7 +119,22 @@ public class AdventureGame {
         row++;
         return "You leave the shop.";
     }
-
+    /** equips a carried item outside fights
+     * @param index zero-based bag index
+     * @return action result
+     */
+    public String equipItem(int index) {
+        if(combat!=null||shopping||finished) return "Manage equipment from the map.";
+        return inventory.equip(index,player);
+    }
+    /** takes off gear outside fights
+     * @param slot zero-based gear slot
+     * @return action result
+     */
+    public String unequipItem(int slot) {
+        if(combat!=null||shopping||finished) return "Manage equipment from the map.";
+        return inventory.unequip(slot,player);
+    }
     /** grants fight rewards or ends run
      * @return battle outcome
      */
@@ -107,6 +147,14 @@ public class AdventureGame {
         }
         int reward=(encounter==NodeType.ELITE?35:encounter==NodeType.BOSS?45:15)+stage.getNumber()*5; //win gold
         gold+=reward;
+        String extra=""; //elite loot message
+        if(encounter==NodeType.ELITE) {
+            String[] names={"Guardian Sigil","Sentinel Sigil","Reaper Sigil"}; //rare names
+            int tier=stage.getNumber(); //elite tier
+            Equipment drop=new Equipment(names[tier-1],Equipment.Slot.RING,2*tier,3*tier,0,true); //elite-only ring
+            inventory.add(drop);
+            extra=" Elite drop: "+drop.getName()+".";
+        }
         if(encounter==NodeType.BOSS) {
             if(stage.getNumber()==3) {
                 won=true;
@@ -119,13 +167,16 @@ public class AdventureGame {
             return "Boss defeated! +"+reward+" gold. Cleared "+cleared+". Next: "+stage.getName()+".";
         }
         row++;
-        return "Enemy defeated! Collected "+reward+" gold.";
+        return "Enemy defeated! Collected "+reward+" gold."+extra;
     }
-
     /** gets character
      * @return chosen hero
      */
     public GameCharacter getPlayer() { return player; }
+    /** gets inventory
+     * @return gear bag and slots
+     */
+    public Inventory getInventory() { return inventory; }
     /** gets zone
      * @return active stage
      */
@@ -155,4 +206,5 @@ public class AdventureGame {
      */
     public boolean hasWon() { return won; }
 }
+
 
